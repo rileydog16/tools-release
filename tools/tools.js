@@ -67596,9 +67596,9 @@ var import_jszip2 = __toESM(require_lib3(), 1);
 var runtimeFileName2 = "runtime.js";
 var runtimeFileSourceUrl2 = "/runtime/runtime.js";
 var Builder = class {
-  constructor(project, toolsUrl) {
+  constructor(project, elementoUrl) {
     this.project = project;
-    this.toolsUrl = toolsUrl;
+    this.elementoUrl = elementoUrl;
   }
   get app() {
     return this.project.elementArray().find((el) => el.kind === "App");
@@ -67648,8 +67648,12 @@ var Builder = class {
   //     return {clientApps, serverApps}
   // }
   loadFile(url) {
-    const fullUrl = `${this.toolsUrl}/${url}`;
-    return fetch(fullUrl).then((resp) => resp.text());
+    const fullUrl = `${this.elementoUrl}/${url}`;
+    return fetch(fullUrl).then((resp) => {
+      if (!resp.ok)
+        throw new Error(`Could not fetch ${fullUrl} status ${resp.status} ${resp.statusText}`);
+      return resp;
+    }).then((resp) => resp.text());
   }
   async configFile() {
     const config = await this.getConfig();
@@ -67690,7 +67694,7 @@ var import_lightning_fs = __toESM(require_src(), 1);
 var projectFileName = "ElementoProject.json";
 
 // src/generator/build.ts
-async function buildProject(projectDir, outputDir, toolsUrl) {
+async function buildProject(projectDir, outputDir, elementoUrl) {
   console.log("buildProject", projectDir, outputDir);
   const clientDir = `${outputDir}/client`;
   const serverDir = `${outputDir}/server`;
@@ -67698,7 +67702,7 @@ async function buildProject(projectDir, outputDir, toolsUrl) {
   fs.mkdirSync(serverDir, { recursive: true });
   const projectJson = fs.readFileSync(`${projectDir}/${projectFileName}`, "utf8");
   const project = loadJSONFromString(projectJson);
-  const builder = new Builder(project, toolsUrl);
+  const builder = new Builder(project, elementoUrl);
   const clientFiles = await builder.clientFiles();
   for (let path in clientFiles) {
     fs.writeFileSync(`${clientDir}/${path}`, clientFiles[path].text, { encoding: "utf8" });
