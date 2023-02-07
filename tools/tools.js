@@ -67594,7 +67594,7 @@ import fs from "fs";
 // src/generator/Builder.ts
 var import_jszip2 = __toESM(require_lib3(), 1);
 var runtimeFileName2 = "runtime.js";
-var runtimeFileSourceUrl2 = "/runtime/runtime.js";
+var runtimeFileSourcePath = "/runtime/runtime.js";
 var Builder = class {
   constructor(project, elementoUrl) {
     this.project = project;
@@ -67624,10 +67624,10 @@ var Builder = class {
         text: this.codeFile()
       },
       [`/${runtimeFileName2}`]: {
-        text: await this.loadFile(runtimeFileSourceUrl2)
+        text: await this.loadFile(runtimeFileSourcePath)
       },
       [`/${runtimeFileName2}.map`]: {
-        text: await this.loadFile(runtimeFileSourceUrl2 + ".map")
+        text: await this.loadFile(runtimeFileSourcePath + ".map")
       }
     };
     return files;
@@ -67647,8 +67647,8 @@ var Builder = class {
   //     const serverApps = Object.fromEntries(serverAppSources.map(app => [app.codeName, generateServerApp(app)]))
   //     return {clientApps, serverApps}
   // }
-  loadFile(url) {
-    const fullUrl = `${this.elementoUrl}/${url}`;
+  loadFile(path) {
+    const fullUrl = `${this.elementoUrl}${path}`;
     return fetch(fullUrl).then((resp) => {
       console.log("Download", fullUrl, "status", resp.status);
       if (!resp.ok)
