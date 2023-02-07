@@ -67650,6 +67650,7 @@ var Builder = class {
   loadFile(url) {
     const fullUrl = `${this.elementoUrl}/${url}`;
     return fetch(fullUrl).then((resp) => {
+      console.log("Download", fullUrl, "status", resp.status);
       if (!resp.ok)
         throw new Error(`Could not fetch ${fullUrl} status ${resp.status} ${resp.statusText}`);
       return resp;
