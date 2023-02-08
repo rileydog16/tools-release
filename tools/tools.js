@@ -67595,6 +67595,7 @@ import fs from "fs";
 var import_jszip2 = __toESM(require_lib3(), 1);
 var runtimeFileName2 = "runtime.js";
 var runtimeFileSourcePath = "/runtime/runtime.js";
+var serverRuntimeFileSourcePath = "/serverRuntime/serverRuntime.js";
 var Builder = class {
   constructor(project, elementoUrl) {
     this.project = project;
@@ -67613,24 +67614,23 @@ var Builder = class {
     return { config: true };
   }
   async clientFiles() {
-    const files = {
-      "/index.html": {
-        text: this.indexFile()
-      },
-      "/firebaseConfig.json": {
-        text: await this.configFile()
-      },
-      [`/${this.codeFileName}`]: {
-        text: this.codeFile()
-      },
-      [`/${runtimeFileName2}`]: {
-        text: await this.loadFile(runtimeFileSourcePath)
-      },
-      [`/${runtimeFileName2}.map`]: {
-        text: await this.loadFile(runtimeFileSourcePath + ".map")
-      }
+    return {
+      "/index.html": { text: this.indexFile() },
+      "/firebaseConfig.json": { text: await this.configFile() },
+      [`/${this.codeFileName}`]: { text: this.codeFile() },
+      [`/${runtimeFileName2}`]: { text: await this.loadFile(runtimeFileSourcePath) },
+      [`/${runtimeFileName2}.map`]: { text: await this.loadFile(runtimeFileSourcePath + ".map") }
     };
-    return files;
+  }
+  async serverFiles() {
+    const gen = new ServerAppGenerator(this.serverApp);
+    const generatedFiles = Object.fromEntries(gen.output().files.map(({ name: name4, content }) => [name4, { text: content }]));
+    console.log("generatedFiles", generatedFiles);
+    const staticFiles = {
+      "serverRuntime.js": { text: await this.loadFile(serverRuntimeFileSourcePath) },
+      "serverRuntime.js.map": { text: await this.loadFile(serverRuntimeFileSourcePath + ".map") }
+    };
+    return { ...generatedFiles, ...staticFiles };
   }
   codeFile() {
     const imports = [
@@ -67639,14 +67639,6 @@ var Builder = class {
     ];
     return generate(this.app, this.project, imports).code;
   }
-  // private generateCode() {
-  //     const mainClientAppSource = this.project.elementArray().find(el => el.kind === 'App') as App
-  //     const serverAppSources = this.project.elementArray().filter(el => el.kind === 'ServerApp') as ServerApp[]
-  //
-  //     const clientApps = Object.fromEntries(clientAppSources.map(app => [app.codeName, generate(app, this.project)]))
-  //     const serverApps = Object.fromEntries(serverAppSources.map(app => [app.codeName, generateServerApp(app)]))
-  //     return {clientApps, serverApps}
-  // }
   loadFile(path) {
     const fullUrl = `${this.elementoUrl}${path}`;
     return fetch(fullUrl).then((resp) => {
@@ -67704,10 +67696,13 @@ async function buildProject(projectDir, outputDir, elementoUrl) {
   const projectJson = fs.readFileSync(`${projectDir}/${projectFileName}`, "utf8");
   const project = loadJSONFromString(projectJson);
   const builder = new Builder(project, elementoUrl);
-  const clientFiles = await builder.clientFiles();
-  for (let path in clientFiles) {
-    fs.writeFileSync(`${clientDir}/${path}`, clientFiles[path].text, { encoding: "utf8" });
-  }
+  const writeFiles = (clientFiles, clientDir2) => {
+    for (let path in clientFiles) {
+      fs.writeFileSync(`${clientDir2}/${path}`, clientFiles[path].text, { encoding: "utf8" });
+    }
+  };
+  writeFiles(await builder.clientFiles(), clientDir);
+  writeFiles(await builder.serverFiles(), serverDir);
   fs.cpSync(`${projectDir}/files`, `${clientDir}/files`, { recursive: true, preserveTimestamps: true });
 }
 export {
