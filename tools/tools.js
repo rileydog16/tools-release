@@ -59864,7 +59864,7 @@ var BaseInputElement = class extends BaseElement {
 // src/model/TextInput.ts
 var TextInput = class extends BaseInputElement {
   static get iconClass() {
-    return "rectangle_outlined";
+    return "crop_16_9";
   }
   get valueType() {
     return "string";
@@ -59942,7 +59942,7 @@ var eventAction = (...argumentNames) => ({ type: "Action", argumentNames });
 var appearanceChoices = ["outline", "filled", "link"];
 var Button = class extends BaseElement {
   static get iconClass() {
-    return "crop75";
+    return "crop_3_2";
   }
   static get initialProperties() {
     return { content: "Do something", appearance: appearanceChoices[0] };
@@ -61798,12 +61798,17 @@ import app from './${this.app.codeName}Express.js'`;
   }
   packageJson() {
     return { name: `package.json`, content: `{
-    "type": "module",
-    "dependencies": {
-      "express": "^4.18.1",
-      "firebase-functions": "^3.23.0",
-      "firebase-admin": "^11.0.1"
-    }
+  "type": "module",
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.18.1",
+    "firebase-functions": "^3.23.0",
+    "firebase-admin": "^11.0.1"
+  },
+  "private": true
 }` };
   }
   getExpr(element, propertyName, exprType = "singleExpression") {
@@ -67625,7 +67630,6 @@ var Builder = class {
   async serverFiles() {
     const gen = new ServerAppGenerator(this.serverApp);
     const generatedFiles = Object.fromEntries(gen.output().files.map(({ name: name4, content }) => [name4, { text: content }]));
-    console.log("generatedFiles", generatedFiles);
     const staticFiles = {
       "serverRuntime.js": { text: await this.loadFile(serverRuntimeFileSourcePath) },
       "serverRuntime.js.map": { text: await this.loadFile(serverRuntimeFileSourcePath + ".map") }
@@ -67696,14 +67700,16 @@ async function buildProject(projectDir, outputDir, elementoUrl) {
   const projectJson = fs.readFileSync(`${projectDir}/${projectFileName}`, "utf8");
   const project = loadJSONFromString(projectJson);
   const builder = new Builder(project, elementoUrl);
-  const writeFiles = (clientFiles, clientDir2) => {
-    for (let path in clientFiles) {
-      fs.writeFileSync(`${clientDir2}/${path}`, clientFiles[path].text, { encoding: "utf8" });
+  const writeFiles = (files, dir) => {
+    for (let path in files) {
+      fs.writeFileSync(`${dir}/${path}`, files[path].text, { encoding: "utf8" });
     }
   };
   writeFiles(await builder.clientFiles(), clientDir);
   writeFiles(await builder.serverFiles(), serverDir);
-  fs.cpSync(`${projectDir}/files`, `${clientDir}/files`, { recursive: true, preserveTimestamps: true });
+  if (fs.lstatSync(`${projectDir}/files`)) {
+    fs.cpSync(`${projectDir}/files`, `${clientDir}/files`, { recursive: true, preserveTimestamps: true });
+  }
 }
 export {
   buildProject,
