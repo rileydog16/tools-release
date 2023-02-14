@@ -67707,7 +67707,7 @@ async function buildProject(projectDir, outputDir, elementoUrl) {
   };
   writeFiles(await builder.clientFiles(), clientDir);
   writeFiles(await builder.serverFiles(), serverDir);
-  if (fs.lstatSync(`${projectDir}/files`)) {
+  if (fs.existsSync(`${projectDir}/files`)) {
     fs.cpSync(`${projectDir}/files`, `${clientDir}/files`, { recursive: true, preserveTimestamps: true });
   }
 }
