@@ -48731,9 +48731,9 @@ var require_load = __commonJS({
 var require_lib3 = __commonJS({
   "node_modules/jszip/lib/index.js"(exports, module) {
     "use strict";
-    function JSZip3() {
-      if (!(this instanceof JSZip3)) {
-        return new JSZip3();
+    function JSZip2() {
+      if (!(this instanceof JSZip2)) {
+        return new JSZip2();
       }
       if (arguments.length) {
         throw new Error("The constructor with parameters has been removed in JSZip 3.0, please check the upgrade guide.");
@@ -48742,7 +48742,7 @@ var require_lib3 = __commonJS({
       this.comment = null;
       this.root = "";
       this.clone = function() {
-        var newObj = new JSZip3();
+        var newObj = new JSZip2();
         for (var i in this) {
           if (typeof this[i] !== "function") {
             newObj[i] = this[i];
@@ -48751,16 +48751,16 @@ var require_lib3 = __commonJS({
         return newObj;
       };
     }
-    JSZip3.prototype = require_object();
-    JSZip3.prototype.loadAsync = require_load();
-    JSZip3.support = require_support();
-    JSZip3.defaults = require_defaults();
-    JSZip3.version = "3.10.1";
-    JSZip3.loadAsync = function(content, options) {
-      return new JSZip3().loadAsync(content, options);
+    JSZip2.prototype = require_object();
+    JSZip2.prototype.loadAsync = require_load();
+    JSZip2.support = require_support();
+    JSZip2.defaults = require_defaults();
+    JSZip2.version = "3.10.1";
+    JSZip2.loadAsync = function(content, options) {
+      return new JSZip2().loadAsync(content, options);
     };
-    JSZip3.external = require_external();
-    module.exports = JSZip3;
+    JSZip2.external = require_external();
+    module.exports = JSZip2;
   }
 });
 
@@ -67597,7 +67597,6 @@ ${indent2(exprCode, "        ")}
 import fs from "fs";
 
 // src/generator/Builder.ts
-var import_jszip2 = __toESM(require_lib3(), 1);
 var runtimeFileName2 = "runtime.js";
 var runtimeFileSourcePath = "/runtime/runtime.js";
 var serverRuntimeFileSourcePath = "/serverRuntime/serverRuntime.js";
@@ -67615,13 +67614,10 @@ var Builder = class {
   get codeFileName() {
     return `${this.app.codeName}.js`;
   }
-  async getConfig() {
-    return { config: true };
-  }
   async clientFiles() {
     return {
       "/index.html": { text: this.indexFile() },
-      "/firebaseConfig.json": { text: await this.configFile() },
+      //'/firebaseConfig.json':     // downloaded and inserted by build script
       [`/${this.codeFileName}`]: { text: this.codeFile() },
       [`/${runtimeFileName2}`]: { text: await this.loadFile(runtimeFileSourcePath) },
       [`/${runtimeFileName2}.map`]: { text: await this.loadFile(runtimeFileSourcePath + ".map") }
@@ -67651,11 +67647,6 @@ var Builder = class {
         throw new Error(`Could not fetch ${fullUrl} status ${resp.status} ${resp.statusText}`);
       return resp;
     }).then((resp) => resp.text());
-  }
-  async configFile() {
-    const config = await this.getConfig();
-    console.log("config", config);
-    return JSON.stringify(config, null, 2);
   }
   indexFile() {
     return `<!DOCTYPE html>
@@ -67711,7 +67702,10 @@ async function buildProject(projectDir, outputDir, elementoUrl) {
     fs.cpSync(`${projectDir}/files`, `${clientDir}/files`, { recursive: true, preserveTimestamps: true });
   }
   const sdkConfigOutput = fs.readFileSync(`${projectDir}/sdkConfig.out`, "utf8");
-  const firebaseConfigJson = sdkConfigOutput.match(/{[^}]+}/m)[0];
+  const firebaseConfigJson = sdkConfigOutput.match(/{[^}]+}/m)?.[0];
+  if (!firebaseConfigJson) {
+    throw new Error("Could not get firebase sdk config.  Command output was:\n" + sdkConfigOutput);
+  }
   fs.writeFileSync(`${clientDir}/firebaseConfig.json`, firebaseConfigJson, { encoding: "utf8" });
 }
 export {
