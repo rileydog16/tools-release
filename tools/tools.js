@@ -67710,6 +67710,9 @@ async function buildProject(projectDir, outputDir, elementoUrl) {
   if (fs.existsSync(`${projectDir}/files`)) {
     fs.cpSync(`${projectDir}/files`, `${clientDir}/files`, { recursive: true, preserveTimestamps: true });
   }
+  const sdkConfigOutput = fs.readFileSync(`${projectDir}/sdkConfig.out`, "utf8");
+  const firebaseConfigJson = sdkConfigOutput.match(/{[^}]+}/m)[0];
+  fs.writeFileSync(`${clientDir}/firebaseConfig.json`, firebaseConfigJson, { encoding: "utf8" });
 }
 export {
   buildProject,
